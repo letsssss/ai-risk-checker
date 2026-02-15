@@ -52,10 +52,16 @@ function getRiskConfig(level: string) {
   }
 }
 
+// API는 0~1(예: 0.95) 또는 0~100(예: 95)으로 올 수 있음 → 항상 0~100으로 표시
+function toPercent(value: number | undefined): number {
+  if (value == null) return 0
+  return value <= 1 ? Math.round(value * 100) : Math.round(value)
+}
+
 export function FreeResult({ result }: FreeResultProps) {
   const config = getRiskConfig(result.riskLevel)
   const RiskIcon = config.icon
-  const score = result.similarityScore ?? 0
+  const score = toPercent(result.similarityScore) // 0~100으로 통일해 표시·게이지에 사용
   const circumference = 2 * Math.PI * 40
 
   return (

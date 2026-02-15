@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,8 +15,32 @@ interface LockedSectionProps {
   onPaymentComplete: () => void
 }
 
+const PAYMENT_BUTTON_DELAY_MS = 2000
+
 export function LockedSection({ onPaymentComplete }: LockedSectionProps) {
   const [qrOpen, setQrOpen] = useState(false)
+  const [paymentButtonReady, setPaymentButtonReady] = useState(false)
+  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleQrOpenChange = (open: boolean) => {
+    setQrOpen(open)
+    if (delayTimerRef.current) {
+      clearTimeout(delayTimerRef.current)
+      delayTimerRef.current = null
+    }
+    if (open) {
+      delayTimerRef.current = setTimeout(() => {
+        setPaymentButtonReady(true)
+        delayTimerRef.current = null
+      }, PAYMENT_BUTTON_DELAY_MS)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (delayTimerRef.current) clearTimeout(delayTimerRef.current)
+    }
+  }, [])
 
   const lockedFeatures = [
     "AI 유사 표현 위치 표시",
@@ -65,7 +89,7 @@ export function LockedSection({ onPaymentComplete }: LockedSectionProps) {
               {"\u20A99,900"}
             </span>
             <span className="text-3xl font-bold text-foreground tracking-tight">
-              {"\u20A93,900"}
+              {"\u20A94,900"}
             </span>
           </div>
           <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
@@ -74,7 +98,7 @@ export function LockedSection({ onPaymentComplete }: LockedSectionProps) {
 
           {/* Payment */}
           <div className="flex flex-col items-center gap-3 w-full max-w-[260px] mt-1">
-            <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+            <Dialog open={qrOpen} onOpenChange={handleQrOpenChange}>
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
@@ -92,7 +116,7 @@ export function LockedSection({ onPaymentComplete }: LockedSectionProps) {
                   <div className="w-56 h-56 bg-muted rounded-xl flex items-center justify-center border border-border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src="/qr.png"
+                      src="/qr.png?v=3"
                       alt="카카오페이 QR 코드"
                       className="w-full h-full object-contain rounded-xl"
                       onError={(e) => {
@@ -117,6 +141,7 @@ export function LockedSection({ onPaymentComplete }: LockedSectionProps) {
 
             <Button
               onClick={onPaymentComplete}
+              disabled={!paymentButtonReady}
               className="w-full font-semibold rounded-lg h-11 text-[14px] animate-pulse-glow"
               size="lg"
             >
